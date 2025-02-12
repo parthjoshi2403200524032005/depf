@@ -17,7 +17,7 @@ export default function NewEmployee() {
     manager: false,
     workplace: "",
     project: "",
-    reportingManagerID: "",
+    reportingEmployeeManagerID: "",
     referredBy: "",
     interviewDate: "",
     offeredDate: "",
@@ -123,7 +123,7 @@ export default function NewEmployee() {
     // Merge the children into the main form data
     const dataToSubmit = { ...formData, children: children };
     try {
-      await axios.post("http://localhost:8080/employees", dataToSubmit);
+      await axios.post("https://depf-backend.vercel.app/employees", dataToSubmit);
       setLoading(false);
       router.push("/"); // redirect as desired
     } catch (err) {
@@ -219,11 +219,11 @@ export default function NewEmployee() {
                 />
               </div>
               <div>
-                <label className="block mb-2 text-gray-600">Reporting Manager ID</label>
+                <label className="block mb-2 text-gray-600">Reporting Manager Employee ID</label>
                 <input
                   type="text"
                   name="reportingManagerID"
-                  value={formData.reportingManagerID}
+                  value={formData.reportingEmployeeManagerID}
                   onChange={handleChange}
                   className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-400 text-gray-600"
                 />

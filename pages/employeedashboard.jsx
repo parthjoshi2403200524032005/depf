@@ -14,7 +14,7 @@ export default function EmployeeManagement() {
 
   const fetchEmployees = async () => {
     try {
-      const response = await axios.get("http://localhost:8080/employees");
+      const response = await axios.get("https://depf-backend.vercel.app/employees");
       setEmployees(response.data);
     } catch (error) {
       console.error("Error fetching employees", error);
@@ -24,7 +24,7 @@ export default function EmployeeManagement() {
   const handleSearch = async () => {
     try {
       const response = await axios.get(
-        `http://localhost:8080/employees?search=${searchQuery}`
+        `https://depf-backend.vercel.app/employees?search=${searchQuery}`
       );
       setEmployees(response.data);
     } catch (error) {
@@ -34,7 +34,7 @@ export default function EmployeeManagement() {
 
   const handleDelete = async (id) => {
     try {
-      await axios.delete(`http://localhost:8080/employees/${id}`);
+      await axios.delete(`https://depf-backend.vercel.app/employees/${id}`);
       fetchEmployees();
     } catch (error) {
       console.error("Error deleting employee", error);
