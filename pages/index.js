@@ -1,5 +1,5 @@
 
-import EmployeeManagement from "./employee-dashboard";
+import EmployeeManagement from "./employeedashboard";
 
 
 export default function Home() {
