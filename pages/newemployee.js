@@ -8,6 +8,7 @@ export default function NewEmployee() {
   const router = useRouter();
   const [error, setError] = useState(null);
   const [loading, setLoading] = useState(false);
+  const [childList, setChildList] = useState([]);
 
   const [formData, setFormData] = useState({
     employeeID: "",
@@ -29,14 +30,14 @@ export default function NewEmployee() {
     education: {
       highestEducation: "",
       yearOfPassing: "",
-      relevantExperience: ""
+      relevantExperience: "",
     },
     personal: {
       dob: "",
       age: "",
       gender: "Male",
       bloodGroup: "",
-      aadharNo: ""
+      aadharNo: "",
     },
     communication: {
       phoneNo: "",
@@ -44,7 +45,7 @@ export default function NewEmployee() {
       personalEmail: "",
       workEmail: "",
       permanentAddress: "",
-      correspondentAddress: ""
+      correspondentAddress: "",
     },
     insuranceAndBank: {
       gpaiNo: "",
@@ -54,35 +55,45 @@ export default function NewEmployee() {
       uan: "",
       esiNo: "",
       maritalStatus: "Single",
-      marriageDate: ""
+      marriageDate: "",
     },
     mother: {
       motherName: "",
       motherAadharNo: "",
-      motherDOB: ""
+      motherDOB: "",
     },
     father: {
       fatherName: "",
       fatherAadharNo: "",
-      fatherDOB: ""
+      fatherDOB: "",
     },
     spouse: {
       spouseName: "",
       spouseAadharNo: "",
-      spouseDOB: ""
+      spouseDOB: "",
     },
     children: [],
     emergencyContact: {
       name: "",
       relationship: "",
-      phone: ""
-    }
+      phone: "",
+    },
   });
 
   // State for a new child entry before adding it to the children array
-  const [child, setChild] = useState({ childName: "", childAadharNo: "", childDOB: "" });
+  const [child, setChild] = useState({
+    childName: "",
+    childAadharNo: "",
+    childDOB: "",
+  });
+  const [education, setEducation] = useState({
+    highestEducation: "",
+    yearOfPassing: "",
+    relevantExperience: "",
+  });
   const [children, setChildren] = useState([]);
-
+  const [educationList, setEducationList] = useState([]);
+  const [editingIndex, setEditingIndex] = useState(null);
   // Generic change handler (supports one level of nested properties using dot notation)
   const handleChange = (e) => {
     const { name, value, type, checked } = e.target;
@@ -92,27 +103,14 @@ export default function NewEmployee() {
         ...prev,
         [parent]: {
           ...prev[parent],
-          [childKey]: type === "checkbox" ? checked : value
-        }
+          [childKey]: type === "checkbox" ? checked : value,
+        },
       }));
     } else {
       setFormData((prev) => ({
         ...prev,
-        [name]: type === "checkbox" ? checked : value
+        [name]: type === "checkbox" ? checked : value,
       }));
-    }
-  };
-
-  // For child inputs
-  const handleChildChange = (e) => {
-    const { name, value } = e.target;
-    setChild((prev) => ({ ...prev, [name]: value }));
-  };
-
-  const addChild = () => {
-    if (child.childName.trim() !== "") {
-      setChildren((prev) => [...prev, child]);
-      setChild({ childName: "", childAadharNo: "", childDOB: "" });
     }
   };
 
@@ -123,7 +121,7 @@ export default function NewEmployee() {
     // Merge the children into the main form data
     const dataToSubmit = { ...formData, children: children };
     try {
-      await axios.post("https://depf-backend.vercel.app/employees", dataToSubmit);
+      await axios.post(`${url}/employees`, dataToSubmit);
       setLoading(false);
       router.push("/"); // redirect as desired
     } catch (err) {
@@ -133,18 +131,113 @@ export default function NewEmployee() {
     }
   };
 
+  const [editingChildIndex, setEditingChildIndex] = useState(null); // Track the editing child index
+
+  const handleChildChange = (e) => {
+    const { name, value } = e.target;
+    setChild((prev) => ({ ...prev, [name]: value }));
+  };
+
+  // const addChild = () => {
+  //   if (editingChildIndex !== null) {
+  //     // Update existing child
+  //     const updatedChildren = [...children];
+  //     updatedChildren[editingChildIndex] = child;
+  //     setChildren(updatedChildren);
+  //     setEditingChildIndex(null);
+  //   } else {
+  //     // Prevent adding more than 2 children
+  //     if (children.length < 2) {
+  //       setChildren([...children, child]);
+  //     }
+  //   }
+  //   // Reset child input fields
+  //   setChild({ childName: "", childAadharNo: "", childDOB: "" });
+  // };
+
+  const addChild = () => {
+    if (editingChildIndex !== null) {
+      // Update an existing child
+      const updatedChildren = [...children];
+      updatedChildren[editingChildIndex] = child;
+      setChildren(updatedChildren);
+      setEditingChildIndex(null);
+    } else {
+      if (children.length < 2) {
+        setChildren([...children, child]);
+      }
+    }
+  
+    // Reset child state
+    setChild({ childName: "", childAadharNo: "", childDOB: "" });
+  };
+  
+  
+  const editChild = (index) => {
+    setChild(children[index]); // Load selected child data into form
+    setEditingChildIndex(index); // Set index for editing mode
+  };
+
+  const deleteChild = (index) => {
+    setChildren(children.filter((_, i) => i !== index)); // Remove child
+  };
+
+  const [editingEducationIndex, setEditingEducationIndex] = useState(null); // Track the editing education index
+  const [editEduIndex, setEditEduIndex] = useState(null);
+
+  const handleEducationChange = (e) => {
+    const { name, value } = e.target;
+    setEducation((prev) => ({
+      ...prev,
+      [name]: value,
+    }));
+  };
+
+  const addEducation = () => {
+    if (editEduIndex !== null) {
+      setEducationList((prev) =>
+        prev.map((item, index) =>
+          index === editEduIndex ? { ...education } : item
+        )
+      );
+      setEditEduIndex(null);
+    } else {
+      setEducationList((prev) => [...prev, education]);
+    }
+    setEducation({
+      highestEducation: "",
+      yearOfPassing: "",
+      relevantExperience: "",
+    });
+  };
+
+  const editEducation = (index) => {
+    setEducation(educationList[index]);
+    setEditEduIndex(index);
+  };
+
+  const deleteEducation = (index) => {
+    setEducationList(educationList.filter((_, i) => i !== index)); // Remove education entry
+  };
+
   return (
     <Layout>
       <div className="max-w-4xl mx-auto bg-white p-8 rounded-xl shadow-lg">
-        <h1 className="text-3xl font-bold text-center mb-8 text-gray-800">New Employee Registration</h1>
+        <h1 className="text-3xl font-bold text-center mb-8 text-gray-800">
+          New Employee Registration
+        </h1>
         {error && <p className="mb-4 text-red-500 text-center">{error}</p>}
         <form onSubmit={handleSubmit} className="space-y-10">
           {/* Basic Information */}
           <section className="border p-6 rounded-lg">
-            <h2 className="text-2xl font-semibold text-gray-700 mb-4 border-b pb-2">Basic Information</h2>
+            <h2 className="text-2xl font-semibold text-gray-700 mb-4 border-b pb-2">
+              Basic Information
+            </h2>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div>
-                <label className="block mb-2 text-gray-600">Employee ID <span className="text-red-500">*</span></label>
+                <label className="block mb-2 text-gray-600">
+                  Employee ID <span className="text-red-500">*</span>
+                </label>
                 <input
                   type="text"
                   name="employeeID"
@@ -155,7 +248,9 @@ export default function NewEmployee() {
                 />
               </div>
               <div>
-                <label className="block mb-2 text-gray-600">Employee Name <span className="text-red-500">*</span></label>
+                <label className="block mb-2 text-gray-600">
+                  Employee Name <span className="text-red-500">*</span>
+                </label>
                 <input
                   type="text"
                   name="employeeName"
@@ -166,7 +261,9 @@ export default function NewEmployee() {
                 />
               </div>
               <div>
-                <label className="block mb-2 text-gray-600">Position <span className="text-red-500">*</span></label>
+                <label className="block mb-2 text-gray-600">
+                  Position <span className="text-red-500">*</span>
+                </label>
                 <input
                   type="text"
                   name="appointedPosition"
@@ -177,7 +274,9 @@ export default function NewEmployee() {
                 />
               </div>
               <div>
-                <label className="block mb-2 text-gray-600">Department <span className="text-red-500">*</span></label>
+                <label className="block mb-2 text-gray-600">
+                  Department <span className="text-red-500">*</span>
+                </label>
                 <input
                   type="text"
                   name="department"
@@ -198,7 +297,9 @@ export default function NewEmployee() {
                 <label className="text-gray-600 font-medium">Manager</label>
               </div>
               <div>
-                <label className="block mb-2 text-gray-600">Workplace <span className="text-red-500">*</span></label>
+                <label className="block mb-2 text-gray-600">
+                  Workplace <span className="text-red-500">*</span>
+                </label>
                 <input
                   type="text"
                   name="workplace"
@@ -219,7 +320,9 @@ export default function NewEmployee() {
                 />
               </div>
               <div>
-                <label className="block mb-2 text-gray-600">Reporting Manager Employee ID</label>
+                <label className="block mb-2 text-gray-600">
+                  Reporting Manager Employee ID
+                </label>
                 <input
                   type="text"
                   name="reportingManagerID"
@@ -243,10 +346,14 @@ export default function NewEmployee() {
 
           {/* Dates & Employment */}
           <section className="border p-6 rounded-lg">
-            <h2 className="text-2xl font-semibold text-gray-700 mb-4 border-b pb-2">Dates & Employment</h2>
+            <h2 className="text-2xl font-semibold text-gray-700 mb-4 border-b pb-2">
+              Dates & Employment
+            </h2>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div>
-                <label className="block mb-2 text-gray-600">Interview Date</label>
+                <label className="block mb-2 text-gray-600">
+                  Interview Date
+                </label>
                 <input
                   type="date"
                   name="interviewDate"
@@ -266,7 +373,9 @@ export default function NewEmployee() {
                 />
               </div>
               <div>
-                <label className="block mb-2 text-gray-600">Offer Acceptance Date</label>
+                <label className="block mb-2 text-gray-600">
+                  Offer Acceptance Date
+                </label>
                 <input
                   type="date"
                   name="offerAcceptanceDate"
@@ -276,7 +385,9 @@ export default function NewEmployee() {
                 />
               </div>
               <div>
-                <label className="block mb-2 text-gray-600">On-Roll/Off-Roll <span className="text-red-500">*</span></label>
+                <label className="block mb-2 text-gray-600">
+                  On-Roll/Off-Roll <span className="text-red-500">*</span>
+                </label>
                 <select
                   name="onRollOffRoll"
                   value={formData.onRollOffRoll}
@@ -289,7 +400,9 @@ export default function NewEmployee() {
                 </select>
               </div>
               <div>
-                <label className="block mb-2 text-gray-600">Appointment Letter Ref No</label>
+                <label className="block mb-2 text-gray-600">
+                  Appointment Letter Ref No
+                </label>
                 <input
                   type="text"
                   name="appointmentLetterRefNo"
@@ -299,7 +412,9 @@ export default function NewEmployee() {
                 />
               </div>
               <div>
-                <label className="block mb-2 text-gray-600">Date of Joining <span className="text-red-500">*</span></label>
+                <label className="block mb-2 text-gray-600">
+                  Date of Joining <span className="text-red-500">*</span>
+                </label>
                 <input
                   type="date"
                   name="dateOfJoining"
@@ -321,53 +436,95 @@ export default function NewEmployee() {
               </div>
             </div>
           </section>
-
-          {/* Education */}
+          {/* Education Section */}
           <section className="border p-6 rounded-lg">
-            <h2 className="text-2xl font-semibold text-gray-700 mb-4 border-b pb-2">Education</h2>
+            <h2 className="text-2xl font-semibold text-gray-700 mb-4 border-b pb-2">
+              Education
+            </h2>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
               <div>
-                <label className="block mb-2 text-gray-600">Highest Education <span className="text-red-500">*</span></label>
+                <label className="block mb-2 text-gray-600">
+                  Highest Education
+                </label>
                 <input
                   type="text"
-                  name="education.highestEducation"
-                  value={formData.education.highestEducation}
-                  onChange={handleChange}
+                  name="highestEducation"
+                  value={education.highestEducation}
+                  onChange={handleEducationChange}
                   className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-400 text-gray-600"
-                  required
                 />
               </div>
               <div>
-                <label className="block mb-2 text-gray-600">Year of Passing <span className="text-red-500">*</span></label>
+                <label className="block mb-2 text-gray-600">
+                  Year of Passing
+                </label>
                 <input
                   type="number"
-                  name="education.yearOfPassing"
-                  value={formData.education.yearOfPassing}
-                  onChange={handleChange}
+                  name="yearOfPassing"
+                  value={education.yearOfPassing}
+                  onChange={handleEducationChange}
                   className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-400 text-gray-600"
-                  required
                 />
               </div>
               <div>
-                <label className="block mb-2 text-gray-600">Relevant Experience <span className="text-red-500">*</span></label>
+                <label className="block mb-2 text-gray-600">
+                  Relevant Experience
+                </label>
                 <input
                   type="text"
-                  name="education.relevantExperience"
-                  value={formData.education.relevantExperience}
-                  onChange={handleChange}
+                  name="relevantExperience"
+                  value={education.relevantExperience}
+                  onChange={handleEducationChange}
                   className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-400 text-gray-600"
-                  required
                 />
               </div>
             </div>
+            <button
+              type="button"
+              onClick={addEducation}
+              disabled={educationList.length >= 2 && editEduIndex === null}
+              className={`mt-4 px-5 py-2 rounded-md ${
+                educationList.length >= 2 && editEduIndex === null
+                  ? "bg-gray-400 cursor-not-allowed"
+                  : "bg-green-600 hover:bg-green-700 text-white"
+              }`}
+            >
+              {editEduIndex !== null ? "Update Education" : "Add Education"}
+            </button>
+
+            {educationList.length > 0 && (
+              <div className="mt-4">
+                <h3 className="text-lg font-semibold text-gray-700">
+                  Added Education:
+                </h3>
+                <ul className="list-disc pl-5 text-gray-600">
+                  {educationList.map((edu, index) => (
+                    <li key={index} className="flex justify-between">
+                      {edu.highestEducation} – {edu.yearOfPassing} –{" "}
+                      {edu.relevantExperience}
+                      <button
+                        onClick={() => editEducation(index)}
+                        className="ml-4 text-blue-600 underline"
+                      >
+                        Edit
+                      </button>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            )}
           </section>
 
           {/* Personal Details */}
           <section className="border p-6 rounded-lg">
-            <h2 className="text-2xl font-semibold text-gray-700 mb-4 border-b pb-2">Personal Details</h2>
+            <h2 className="text-2xl font-semibold text-gray-700 mb-4 border-b pb-2">
+              Personal Details
+            </h2>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
               <div>
-                <label className="block mb-2 text-gray-600">Date of Birth <span className="text-red-500">*</span></label>
+                <label className="block mb-2 text-gray-600">
+                  Date of Birth <span className="text-red-500">*</span>
+                </label>
                 <input
                   type="date"
                   name="personal.dob"
@@ -378,7 +535,9 @@ export default function NewEmployee() {
                 />
               </div>
               <div>
-                <label className="block mb-2 text-gray-600">Age <span className="text-red-500">*</span></label>
+                <label className="block mb-2 text-gray-600">
+                  Age <span className="text-red-500">*</span>
+                </label>
                 <input
                   type="number"
                   name="personal.age"
@@ -389,7 +548,9 @@ export default function NewEmployee() {
                 />
               </div>
               <div>
-                <label className="block mb-2 text-gray-600">Gender <span className="text-red-500">*</span></label>
+                <label className="block mb-2 text-gray-600">
+                  Gender <span className="text-red-500">*</span>
+                </label>
                 <select
                   name="personal.gender"
                   value={formData.personal.gender}
@@ -403,7 +564,9 @@ export default function NewEmployee() {
                 </select>
               </div>
               <div>
-                <label className="block mb-2 text-gray-600">Blood Group <span className="text-red-500">*</span></label>
+                <label className="block mb-2 text-gray-600">
+                  Blood Group <span className="text-red-500">*</span>
+                </label>
                 <input
                   type="text"
                   name="personal.bloodGroup"
@@ -414,7 +577,9 @@ export default function NewEmployee() {
                 />
               </div>
               <div>
-                <label className="block mb-2 text-gray-600">Aadhar No <span className="text-red-500">*</span></label>
+                <label className="block mb-2 text-gray-600">
+                  Aadhar No <span className="text-red-500">*</span>
+                </label>
                 <input
                   type="text"
                   name="personal.aadharNo"
@@ -429,10 +594,14 @@ export default function NewEmployee() {
 
           {/* Communication */}
           <section className="border p-6 rounded-lg">
-            <h2 className="text-2xl font-semibold text-gray-700 mb-4 border-b pb-2">Communication</h2>
+            <h2 className="text-2xl font-semibold text-gray-700 mb-4 border-b pb-2">
+              Communication
+            </h2>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div>
-                <label className="block mb-2 text-gray-600">Phone No <span className="text-red-500">*</span></label>
+                <label className="block mb-2 text-gray-600">
+                  Phone No <span className="text-red-500">*</span>
+                </label>
                 <input
                   type="text"
                   name="communication.phoneNo"
@@ -443,7 +612,9 @@ export default function NewEmployee() {
                 />
               </div>
               <div>
-                <label className="block mb-2 text-gray-600">Alternate Phone No</label>
+                <label className="block mb-2 text-gray-600">
+                  Alternate Phone No
+                </label>
                 <input
                   type="text"
                   name="communication.altPhoneNo"
@@ -453,7 +624,9 @@ export default function NewEmployee() {
                 />
               </div>
               <div>
-                <label className="block mb-2 text-gray-600">Personal Email <span className="text-red-500">*</span></label>
+                <label className="block mb-2 text-gray-600">
+                  Personal Email <span className="text-red-500">*</span>
+                </label>
                 <input
                   type="email"
                   name="communication.personalEmail"
@@ -474,7 +647,9 @@ export default function NewEmployee() {
                 />
               </div>
               <div className="md:col-span-2">
-                <label className="block mb-2 text-gray-600">Permanent Address <span className="text-red-500">*</span></label>
+                <label className="block mb-2 text-gray-600">
+                  Permanent Address <span className="text-red-500">*</span>
+                </label>
                 <textarea
                   name="communication.permanentAddress"
                   value={formData.communication.permanentAddress}
@@ -484,7 +659,9 @@ export default function NewEmployee() {
                 ></textarea>
               </div>
               <div className="md:col-span-2">
-                <label className="block mb-2 text-gray-600">Correspondent Address</label>
+                <label className="block mb-2 text-gray-600">
+                  Correspondent Address
+                </label>
                 <textarea
                   name="communication.correspondentAddress"
                   value={formData.communication.correspondentAddress}
@@ -497,7 +674,9 @@ export default function NewEmployee() {
 
           {/* Insurance & Bank */}
           <section className="border p-6 rounded-lg">
-            <h2 className="text-2xl font-semibold text-gray-700 mb-4 border-b pb-2">Insurance & Bank</h2>
+            <h2 className="text-2xl font-semibold text-gray-700 mb-4 border-b pb-2">
+              Insurance & Bank
+            </h2>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div>
                 <label className="block mb-2 text-gray-600">GPAI No</label>
@@ -520,7 +699,9 @@ export default function NewEmployee() {
                 />
               </div>
               <div>
-                <label className="block mb-2 text-gray-600">Bank Account No</label>
+                <label className="block mb-2 text-gray-600">
+                  Bank Account No
+                </label>
                 <input
                   type="text"
                   name="insuranceAndBank.bankAccountNo"
@@ -560,7 +741,9 @@ export default function NewEmployee() {
                 />
               </div>
               <div>
-                <label className="block mb-2 text-gray-600">Marital Status</label>
+                <label className="block mb-2 text-gray-600">
+                  Marital Status
+                </label>
                 <select
                   name="insuranceAndBank.maritalStatus"
                   value={formData.insuranceAndBank.maritalStatus}
@@ -574,7 +757,9 @@ export default function NewEmployee() {
                 </select>
               </div>
               <div>
-                <label className="block mb-2 text-gray-600">Marriage Date</label>
+                <label className="block mb-2 text-gray-600">
+                  Marriage Date
+                </label>
                 <input
                   type="date"
                   name="insuranceAndBank.marriageDate"
@@ -588,7 +773,9 @@ export default function NewEmployee() {
 
           {/* Family */}
           <section className="border p-6 rounded-lg">
-            <h2 className="text-2xl font-semibold text-gray-700 mb-4 border-b pb-2">Family</h2>
+            <h2 className="text-2xl font-semibold text-gray-700 mb-4 border-b pb-2">
+              Family
+            </h2>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
               {/* Mother */}
               <div>
@@ -602,7 +789,9 @@ export default function NewEmployee() {
                 />
               </div>
               <div>
-                <label className="block mb-2 text-gray-600">Mother Aadhar No</label>
+                <label className="block mb-2 text-gray-600">
+                  Mother Aadhar No
+                </label>
                 <input
                   type="text"
                   name="mother.motherAadharNo"
@@ -633,7 +822,9 @@ export default function NewEmployee() {
                 />
               </div>
               <div>
-                <label className="block mb-2 text-gray-600">Father Aadhar No</label>
+                <label className="block mb-2 text-gray-600">
+                  Father Aadhar No
+                </label>
                 <input
                   type="text"
                   name="father.fatherAadharNo"
@@ -664,7 +855,9 @@ export default function NewEmployee() {
                 />
               </div>
               <div>
-                <label className="block mb-2 text-gray-600">Spouse Aadhar No</label>
+                <label className="block mb-2 text-gray-600">
+                  Spouse Aadhar No
+                </label>
                 <input
                   type="text"
                   name="spouse.spouseAadharNo"
@@ -686,9 +879,11 @@ export default function NewEmployee() {
             </div>
           </section>
 
-          {/* Children */}
+          {/* Children Section */}
           <section className="border p-6 rounded-lg">
-            <h2 className="text-2xl font-semibold text-gray-700 mb-4 border-b pb-2">Children</h2>
+            <h2 className="text-2xl font-semibold text-gray-700 mb-4 border-b pb-2">
+              Children
+            </h2>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
               <div>
                 <label className="block mb-2 text-gray-600">Child Name</label>
@@ -701,7 +896,9 @@ export default function NewEmployee() {
                 />
               </div>
               <div>
-                <label className="block mb-2 text-gray-600">Child Aadhar No</label>
+                <label className="block mb-2 text-gray-600">
+                  Child Aadhar No
+                </label>
                 <input
                   type="text"
                   name="childAadharNo"
@@ -724,17 +921,34 @@ export default function NewEmployee() {
             <button
               type="button"
               onClick={addChild}
-              className="mt-4 bg-green-600 hover:bg-green-700 text-white px-5 py-2 rounded-md"
+              disabled={
+                children?.length >= 2 && editingChildIndex === null
+              }
+              className={`mt-4 px-5 py-2 rounded-md ${
+                children?.length >= 2 && editingChildIndex === null
+                  ? "bg-gray-400 cursor-not-allowed"
+                  : "bg-green-600 hover:bg-green-700 text-white"
+              }`}
             >
-              Add Child
+              {editingChildIndex !== null ? "Update Child" : "Add Child"}
             </button>
+
             {children.length > 0 && (
               <div className="mt-4">
-                <h3 className="text-lg font-semibold text-gray-700">Added Children:</h3>
+                <h3 className="text-lg font-semibold text-gray-700">
+                  Added Children:
+                </h3>
                 <ul className="list-disc pl-5 text-gray-600">
                   {children.map((child, index) => (
-                    <li key={index}>
-                      {child.childName} – {child.childAadharNo} – {child.childDOB}
+                    <li key={index} className="flex justify-between">
+                      {child.childName} – {child.childAadharNo} –{" "}
+                      {child.childDOB}
+                      <button
+                        onClick={() => editChild(index)}
+                        className="ml-4 text-blue-600 underline"
+                      >
+                        Edit
+                      </button>
                     </li>
                   ))}
                 </ul>
@@ -749,7 +963,9 @@ export default function NewEmployee() {
             </h2>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
               <div>
-                <label className="block mb-2 text-gray-600">Name <span className="text-red-500">*</span></label>
+                <label className="block mb-2 text-gray-600">
+                  Name <span className="text-red-500">*</span>
+                </label>
                 <input
                   type="text"
                   name="emergencyContact.name"
@@ -760,7 +976,9 @@ export default function NewEmployee() {
                 />
               </div>
               <div>
-                <label className="block mb-2 text-gray-600">Relationship <span className="text-red-500">*</span></label>
+                <label className="block mb-2 text-gray-600">
+                  Relationship <span className="text-red-500">*</span>
+                </label>
                 <input
                   type="text"
                   name="emergencyContact.relationship"
@@ -771,7 +989,9 @@ export default function NewEmployee() {
                 />
               </div>
               <div>
-                <label className="block mb-2 text-gray-600">Phone <span className="text-red-500">*</span></label>
+                <label className="block mb-2 text-gray-600">
+                  Phone <span className="text-red-500">*</span>
+                </label>
                 <input
                   type="text"
                   name="emergencyContact.phone"
