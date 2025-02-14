@@ -3,6 +3,7 @@ import { useState } from "react";
 import axios from "axios";
 import { useRouter } from "next/router";
 import Layout from "../Components/Layout";
+import { url } from "../Services/Service";
 
 export default function NewEmployee() {
   const router = useRouter();
@@ -27,11 +28,13 @@ export default function NewEmployee() {
     appointmentLetterRefNo: "",
     dateOfJoining: "",
     status: "",
-    education: {
-      highestEducation: "",
-      yearOfPassing: "",
-      relevantExperience: "",
-    },
+    education: [
+      {
+        highestEducation: "",
+        yearOfPassing: "",
+        relevantExperience: "",
+      },
+    ],
     personal: {
       dob: "",
       age: "",
@@ -72,7 +75,13 @@ export default function NewEmployee() {
       spouseAadharNo: "",
       spouseDOB: "",
     },
-    children: [],
+    children: [
+      {
+        childName: "",
+        childAadharNo: "",
+        childDOB: "",
+      },
+    ],
     emergencyContact: {
       name: "",
       relationship: "",
@@ -114,22 +123,62 @@ export default function NewEmployee() {
     }
   };
 
+  // const handleSubmit = async (e) => {
+  //   e.preventDefault();
+  //   setLoading(true);
+  //   setError(null);
+  //   // Merge the children into the main form data
+  //   const dataToSubmit = {
+  //     ...formData,
+  //     children: children,
+  //     education: education,
+  //   };
+  //   console.log("Data being submitted:", dataToSubmit);
+  //   try {
+  //     await axios.post(`${url}/employees`, dataToSubmit);
+  //     setLoading(false);
+  //     router.push("/"); // redirect as desired
+  //   } catch (err) {
+  //     setLoading(false);
+  //     setError(
+  //       err.response?.data?.message ||
+  //         "Error submitting form. Please try again."
+  //     );
+  //     console.error("Submission error:", err.response?.data || err.message);
+  //   }
+  // };
+  console.log("API URL:", url);
   const handleSubmit = async (e) => {
     e.preventDefault();
     setLoading(true);
     setError(null);
-    // Merge the children into the main form data
-    const dataToSubmit = { ...formData, children: children };
+  
+    // Ensure educationList is not empty
+    if (educationList.length === 0) {
+      setError("Please add at least one education entry.");
+      setLoading(false);
+      return;
+    }
+  
+    const dataToSubmit = {
+      ...formData,
+      children: children,
+      education: educationList,  // ✅ Send the correct list
+    };
+  
+    console.log("Data being submitted:", dataToSubmit);
+  
     try {
       await axios.post(`${url}/employees`, dataToSubmit);
       setLoading(false);
-      router.push("/"); // redirect as desired
+      router.push("/"); // Redirect as desired
     } catch (err) {
       setLoading(false);
-      setError("Error submitting form. Please try again.");
-      console.error(err);
+      setError(err.response?.data?.message || "Error submitting form. Please try again.");
+      console.error("Submission error:", err.response?.data || err.message);
     }
   };
+  
 
   const [editingChildIndex, setEditingChildIndex] = useState(null); // Track the editing child index
 
@@ -137,23 +186,6 @@ export default function NewEmployee() {
     const { name, value } = e.target;
     setChild((prev) => ({ ...prev, [name]: value }));
   };
-
-  // const addChild = () => {
-  //   if (editingChildIndex !== null) {
-  //     // Update existing child
-  //     const updatedChildren = [...children];
-  //     updatedChildren[editingChildIndex] = child;
-  //     setChildren(updatedChildren);
-  //     setEditingChildIndex(null);
-  //   } else {
-  //     // Prevent adding more than 2 children
-  //     if (children.length < 2) {
-  //       setChildren([...children, child]);
-  //     }
-  //   }
-  //   // Reset child input fields
-  //   setChild({ childName: "", childAadharNo: "", childDOB: "" });
-  // };
 
   const addChild = () => {
     if (editingChildIndex !== null) {
@@ -167,12 +199,11 @@ export default function NewEmployee() {
         setChildren([...children, child]);
       }
     }
-  
+
     // Reset child state
     setChild({ childName: "", childAadharNo: "", childDOB: "" });
   };
-  
-  
+
   const editChild = (index) => {
     setChild(children[index]); // Load selected child data into form
     setEditingChildIndex(index); // Set index for editing mode
@@ -325,7 +356,7 @@ export default function NewEmployee() {
                 </label>
                 <input
                   type="text"
-                  name="reportingManagerID"
+                  name="reportingEmployeeManagerID"
                   value={formData.reportingEmployeeManagerID}
                   onChange={handleChange}
                   className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-400 text-gray-600"
@@ -921,9 +952,7 @@ export default function NewEmployee() {
             <button
               type="button"
               onClick={addChild}
-              disabled={
-                children?.length >= 2 && editingChildIndex === null
-              }
+              disabled={children?.length >= 2 && editingChildIndex === null}
               className={`mt-4 px-5 py-2 rounded-md ${
                 children?.length >= 2 && editingChildIndex === null
                   ? "bg-gray-400 cursor-not-allowed"
