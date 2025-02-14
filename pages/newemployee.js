@@ -152,33 +152,35 @@ export default function NewEmployee() {
     e.preventDefault();
     setLoading(true);
     setError(null);
-  
+
     // Ensure educationList is not empty
     if (educationList.length === 0) {
       setError("Please add at least one education entry.");
       setLoading(false);
       return;
     }
-  
+
     const dataToSubmit = {
       ...formData,
       children: children,
-      education: educationList,  // ✅ Send the correct list
+      education: educationList, // ✅ Send the correct list
     };
-  
+
     console.log("Data being submitted:", dataToSubmit);
-  
+
     try {
       await axios.post(`${url}/employees`, dataToSubmit);
       setLoading(false);
       router.push("/"); // Redirect as desired
     } catch (err) {
       setLoading(false);
-      setError(err.response?.data?.message || "Error submitting form. Please try again.");
+      setError(
+        err.response?.data?.message ||
+          "Error submitting form. Please try again."
+      );
       console.error("Submission error:", err.response?.data || err.message);
     }
   };
-  
 
   const [editingChildIndex, setEditingChildIndex] = useState(null); // Track the editing child index
 
@@ -253,71 +255,55 @@ export default function NewEmployee() {
 
   return (
     <Layout>
-      <div className="max-w-4xl mx-auto bg-white p-8 rounded-xl shadow-lg">
-        <h1 className="text-3xl font-bold text-center mb-8 text-gray-800">
+      <div className="max-w-4xl mx-auto bg-white p-6 md:p-8 rounded-xl shadow-lg">
+        <h1 className="text-2xl md:text-3xl font-bold text-center mb-6 md:mb-8 text-gray-800">
           New Employee Registration
         </h1>
         {error && <p className="mb-4 text-red-500 text-center">{error}</p>}
-        <form onSubmit={handleSubmit} className="space-y-10">
+        <form onSubmit={handleSubmit} className="space-y-6 md:space-y-10">
           {/* Basic Information */}
-          <section className="border p-6 rounded-lg">
-            <h2 className="text-2xl font-semibold text-gray-700 mb-4 border-b pb-2">
+          <section className="border p-4 md:p-6 rounded-lg">
+            <h2 className="text-xl md:text-2xl font-semibold text-gray-700 mb-3 md:mb-4 border-b pb-2">
               Basic Information
             </h2>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <div>
-                <label className="block mb-2 text-gray-600">
-                  Employee ID <span className="text-red-500">*</span>
-                </label>
-                <input
-                  type="text"
-                  name="employeeID"
-                  value={formData.employeeID}
-                  onChange={handleChange}
-                  className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-400 text-gray-600"
-                  required
-                />
-              </div>
-              <div>
-                <label className="block mb-2 text-gray-600">
-                  Employee Name <span className="text-red-500">*</span>
-                </label>
-                <input
-                  type="text"
-                  name="employeeName"
-                  value={formData.employeeName}
-                  onChange={handleChange}
-                  className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-400 text-gray-600"
-                  required
-                />
-              </div>
-              <div>
-                <label className="block mb-2 text-gray-600">
-                  Position <span className="text-red-500">*</span>
-                </label>
-                <input
-                  type="text"
-                  name="appointedPosition"
-                  value={formData.appointedPosition}
-                  onChange={handleChange}
-                  className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-400 text-gray-600"
-                  required
-                />
-              </div>
-              <div>
-                <label className="block mb-2 text-gray-600">
-                  Department <span className="text-red-500">*</span>
-                </label>
-                <input
-                  type="text"
-                  name="department"
-                  value={formData.department}
-                  onChange={handleChange}
-                  className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-400 text-gray-600"
-                  required
-                />
-              </div>
-              <div className="flex items-center space-x-3">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6">
+              {[
+                { label: "Employee ID", name: "employeeID", required: true },
+                {
+                  label: "Employee Name",
+                  name: "employeeName",
+                  required: true,
+                },
+                {
+                  label: "Position",
+                  name: "appointedPosition",
+                  required: true,
+                },
+                { label: "Department", name: "department", required: true },
+                { label: "Workplace", name: "workplace", required: true },
+                { label: "Project", name: "project" },
+                {
+                  label: "Reporting Manager Employee ID",
+                  name: "reportingEmployeeManagerID",
+                },
+                { label: "Referred By", name: "referredBy" },
+              ].map(({ label, name, required }) => (
+                <div key={name}>
+                  <label className="block mb-1 md:mb-2 text-gray-600">
+                    {label}{" "}
+                    {required && <span className="text-red-500">*</span>}
+                  </label>
+                  <input
+                    type="text"
+                    name={name}
+                    value={formData[name]}
+                    onChange={handleChange}
+                    className="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-400 text-gray-600"
+                    required={required}
+                  />
+                </div>
+              ))}
+              <div className="flex items-center space-x-2 md:space-x-3">
                 <input
                   type="checkbox"
                   name="manager"
@@ -327,299 +313,140 @@ export default function NewEmployee() {
                 />
                 <label className="text-gray-600 font-medium">Manager</label>
               </div>
-              <div>
-                <label className="block mb-2 text-gray-600">
-                  Workplace <span className="text-red-500">*</span>
-                </label>
-                <input
-                  type="text"
-                  name="workplace"
-                  value={formData.workplace}
-                  onChange={handleChange}
-                  className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-400 text-gray-600"
-                  required
-                />
-              </div>
-              <div>
-                <label className="block mb-2 text-gray-600">Project</label>
-                <input
-                  type="text"
-                  name="project"
-                  value={formData.project}
-                  onChange={handleChange}
-                  className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-400 text-gray-600"
-                />
-              </div>
-              <div>
-                <label className="block mb-2 text-gray-600">
-                  Reporting Manager Employee ID
-                </label>
-                <input
-                  type="text"
-                  name="reportingEmployeeManagerID"
-                  value={formData.reportingEmployeeManagerID}
-                  onChange={handleChange}
-                  className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-400 text-gray-600"
-                />
-              </div>
-              <div>
-                <label className="block mb-2 text-gray-600">Referred By</label>
-                <input
-                  type="text"
-                  name="referredBy"
-                  value={formData.referredBy}
-                  onChange={handleChange}
-                  className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-400 text-gray-600"
-                />
-              </div>
             </div>
           </section>
 
           {/* Dates & Employment */}
-          <section className="border p-6 rounded-lg">
-            <h2 className="text-2xl font-semibold text-gray-700 mb-4 border-b pb-2">
+          <section className="border p-4 md:p-6 rounded-lg">
+            <h2 className="text-xl md:text-2xl font-semibold text-gray-700 mb-3 md:mb-4 border-b pb-2">
               Dates & Employment
             </h2>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <div>
-                <label className="block mb-2 text-gray-600">
-                  Interview Date
-                </label>
-                <input
-                  type="date"
-                  name="interviewDate"
-                  value={formData.interviewDate}
-                  onChange={handleChange}
-                  className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-400 text-gray-600"
-                />
-              </div>
-              <div>
-                <label className="block mb-2 text-gray-600">Offered Date</label>
-                <input
-                  type="date"
-                  name="offeredDate"
-                  value={formData.offeredDate}
-                  onChange={handleChange}
-                  className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-400 text-gray-600"
-                />
-              </div>
-              <div>
-                <label className="block mb-2 text-gray-600">
-                  Offer Acceptance Date
-                </label>
-                <input
-                  type="date"
-                  name="offerAcceptanceDate"
-                  value={formData.offerAcceptanceDate}
-                  onChange={handleChange}
-                  className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-400 text-gray-600"
-                />
-              </div>
-              <div>
-                <label className="block mb-2 text-gray-600">
-                  On-Roll/Off-Roll <span className="text-red-500">*</span>
-                </label>
-                <select
-                  name="onRollOffRoll"
-                  value={formData.onRollOffRoll}
-                  onChange={handleChange}
-                  className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-400 text-gray-600"
-                  required
-                >
-                  <option value="On-Roll">On-Roll</option>
-                  <option value="Off-Roll">Off-Roll</option>
-                </select>
-              </div>
-              <div>
-                <label className="block mb-2 text-gray-600">
-                  Appointment Letter Ref No
-                </label>
-                <input
-                  type="text"
-                  name="appointmentLetterRefNo"
-                  value={formData.appointmentLetterRefNo}
-                  onChange={handleChange}
-                  className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-400 text-gray-600"
-                />
-              </div>
-              <div>
-                <label className="block mb-2 text-gray-600">
-                  Date of Joining <span className="text-red-500">*</span>
-                </label>
-                <input
-                  type="date"
-                  name="dateOfJoining"
-                  value={formData.dateOfJoining}
-                  onChange={handleChange}
-                  className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-400 text-gray-600"
-                  required
-                />
-              </div>
-              <div>
-                <label className="block mb-2 text-gray-600">Status</label>
-                <input
-                  type="text"
-                  name="status"
-                  value={formData.status}
-                  onChange={handleChange}
-                  className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-400 text-gray-600"
-                />
-              </div>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6">
+              {[
+                {
+                  label: "Interview Date",
+                  name: "interviewDate",
+                  type: "date",
+                },
+                { label: "Offered Date", name: "offeredDate", type: "date" },
+                {
+                  label: "Offer Acceptance Date",
+                  name: "offerAcceptanceDate",
+                  type: "date",
+                },
+                {
+                  label: "On-Roll/Off-Roll",
+                  name: "onRollOffRoll",
+                  type: "select",
+                  options: ["On-Roll", "Off-Roll"],
+                  required: true,
+                },
+                {
+                  label: "Appointment Letter Ref No",
+                  name: "appointmentLetterRefNo",
+                },
+                {
+                  label: "Date of Joining",
+                  name: "dateOfJoining",
+                  type: "date",
+                  required: true,
+                },
+                { label: "Status", name: "status" },
+              ].map(({ label, name, type = "text", required, options }) => (
+                <div key={name}>
+                  <label className="block mb-1 md:mb-2 text-gray-600">
+                    {label}{" "}
+                    {required && <span className="text-red-500">*</span>}
+                  </label>
+                  {type === "select" ? (
+                    <select
+                      name={name}
+                      value={formData[name]}
+                      onChange={handleChange}
+                      className="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-400 text-gray-600"
+                      required={required}
+                    >
+                      {options.map((option) => (
+                        <option key={option} value={option}>
+                          {option}
+                        </option>
+                      ))}
+                    </select>
+                  ) : (
+                    <input
+                      type={type}
+                      name={name}
+                      value={formData[name]}
+                      onChange={handleChange}
+                      className="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-400 text-gray-600"
+                      required={required}
+                    />
+                  )}
+                </div>
+              ))}
             </div>
           </section>
           {/* Education Section */}
-          <section className="border p-6 rounded-lg">
+          <section className="border p-6 rounded-lg mb-6">
             <h2 className="text-2xl font-semibold text-gray-700 mb-4 border-b pb-2">
               Education
             </h2>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-              <div>
-                <label className="block mb-2 text-gray-600">
-                  Highest Education
-                </label>
-                <input
-                  type="text"
-                  name="highestEducation"
-                  value={education.highestEducation}
-                  onChange={handleEducationChange}
-                  className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-400 text-gray-600"
-                />
-              </div>
-              <div>
-                <label className="block mb-2 text-gray-600">
-                  Year of Passing
-                </label>
-                <input
-                  type="number"
-                  name="yearOfPassing"
-                  value={education.yearOfPassing}
-                  onChange={handleEducationChange}
-                  className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-400 text-gray-600"
-                />
-              </div>
-              <div>
-                <label className="block mb-2 text-gray-600">
-                  Relevant Experience
-                </label>
-                <input
-                  type="text"
-                  name="relevantExperience"
-                  value={education.relevantExperience}
-                  onChange={handleEducationChange}
-                  className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-400 text-gray-600"
-                />
-              </div>
+              <InputField
+                label="Highest Education"
+                type="text"
+                name="highestEducation"
+              />
+              <InputField
+                label="Year of Passing"
+                type="number"
+                name="yearOfPassing"
+              />
+              <InputField
+                label="Relevant Experience"
+                type="text"
+                name="relevantExperience"
+              />
             </div>
             <button
               type="button"
-              onClick={addEducation}
-              disabled={educationList.length >= 2 && editEduIndex === null}
-              className={`mt-4 px-5 py-2 rounded-md ${
-                educationList.length >= 2 && editEduIndex === null
-                  ? "bg-gray-400 cursor-not-allowed"
-                  : "bg-green-600 hover:bg-green-700 text-white"
-              }`}
+              className="mt-4 px-5 py-2 rounded-md bg-green-600 hover:bg-green-700 text-white"
             >
-              {editEduIndex !== null ? "Update Education" : "Add Education"}
+              Add Education
             </button>
-
-            {educationList.length > 0 && (
-              <div className="mt-4">
-                <h3 className="text-lg font-semibold text-gray-700">
-                  Added Education:
-                </h3>
-                <ul className="list-disc pl-5 text-gray-600">
-                  {educationList.map((edu, index) => (
-                    <li key={index} className="flex justify-between">
-                      {edu.highestEducation} – {edu.yearOfPassing} –{" "}
-                      {edu.relevantExperience}
-                      <button
-                        onClick={() => editEducation(index)}
-                        className="ml-4 text-blue-600 underline"
-                      >
-                        Edit
-                      </button>
-                    </li>
-                  ))}
-                </ul>
-              </div>
-            )}
           </section>
 
           {/* Personal Details */}
-          <section className="border p-6 rounded-lg">
+          <section className="border p-6 rounded-lg mb-6">
             <h2 className="text-2xl font-semibold text-gray-700 mb-4 border-b pb-2">
               Personal Details
             </h2>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-              <div>
-                <label className="block mb-2 text-gray-600">
-                  Date of Birth <span className="text-red-500">*</span>
-                </label>
-                <input
-                  type="date"
-                  name="personal.dob"
-                  value={formData.personal.dob}
-                  onChange={handleChange}
-                  className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-400 text-gray-600"
-                  required
-                />
-              </div>
-              <div>
-                <label className="block mb-2 text-gray-600">
-                  Age <span className="text-red-500">*</span>
-                </label>
-                <input
-                  type="number"
-                  name="personal.age"
-                  value={formData.personal.age}
-                  onChange={handleChange}
-                  className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-400 text-gray-600"
-                  required
-                />
-              </div>
-              <div>
-                <label className="block mb-2 text-gray-600">
-                  Gender <span className="text-red-500">*</span>
-                </label>
-                <select
-                  name="personal.gender"
-                  value={formData.personal.gender}
-                  onChange={handleChange}
-                  className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-400 text-gray-600"
-                  required
-                >
-                  <option value="Male">Male</option>
-                  <option value="Female">Female</option>
-                  <option value="Other">Other</option>
-                </select>
-              </div>
-              <div>
-                <label className="block mb-2 text-gray-600">
-                  Blood Group <span className="text-red-500">*</span>
-                </label>
-                <input
-                  type="text"
-                  name="personal.bloodGroup"
-                  value={formData.personal.bloodGroup}
-                  onChange={handleChange}
-                  className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-400 text-gray-600"
-                  required
-                />
-              </div>
-              <div>
-                <label className="block mb-2 text-gray-600">
-                  Aadhar No <span className="text-red-500">*</span>
-                </label>
-                <input
-                  type="text"
-                  name="personal.aadharNo"
-                  value={formData.personal.aadharNo}
-                  onChange={handleChange}
-                  className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-400 text-gray-600"
-                  required
-                />
-              </div>
+              <InputField
+                label="Date of Birth"
+                type="date"
+                name="dob"
+                required
+              />
+              <InputField label="Age" type="number" name="age" required />
+              <SelectField
+                label="Gender"
+                name="gender"
+                options={["Male", "Female", "Other"]}
+                required
+              />
+              <InputField
+                label="Blood Group"
+                type="text"
+                name="bloodGroup"
+                required
+              />
+              <InputField
+                label="Aadhar No"
+                type="text"
+                name="aadharNo"
+                required
+              />
             </div>
           </section>
 
@@ -629,157 +456,72 @@ export default function NewEmployee() {
               Communication
             </h2>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <div>
-                <label className="block mb-2 text-gray-600">
-                  Phone No <span className="text-red-500">*</span>
-                </label>
-                <input
-                  type="text"
-                  name="communication.phoneNo"
-                  value={formData.communication.phoneNo}
-                  onChange={handleChange}
-                  className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-400 text-gray-600"
-                  required
-                />
-              </div>
-              <div>
-                <label className="block mb-2 text-gray-600">
-                  Alternate Phone No
-                </label>
-                <input
-                  type="text"
-                  name="communication.altPhoneNo"
-                  value={formData.communication.altPhoneNo}
-                  onChange={handleChange}
-                  className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-400 text-gray-600"
-                />
-              </div>
-              <div>
-                <label className="block mb-2 text-gray-600">
-                  Personal Email <span className="text-red-500">*</span>
-                </label>
-                <input
-                  type="email"
-                  name="communication.personalEmail"
-                  value={formData.communication.personalEmail}
-                  onChange={handleChange}
-                  className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-400 text-gray-600"
-                  required
-                />
-              </div>
-              <div>
-                <label className="block mb-2 text-gray-600">Work Email</label>
-                <input
-                  type="email"
-                  name="communication.workEmail"
-                  value={formData.communication.workEmail}
-                  onChange={handleChange}
-                  className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-400 text-gray-600"
-                />
-              </div>
-              <div className="md:col-span-2">
-                <label className="block mb-2 text-gray-600">
-                  Permanent Address <span className="text-red-500">*</span>
-                </label>
-                <textarea
-                  name="communication.permanentAddress"
-                  value={formData.communication.permanentAddress}
-                  onChange={handleChange}
-                  className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-400 text-gray-600"
-                  required
-                ></textarea>
-              </div>
-              <div className="md:col-span-2">
-                <label className="block mb-2 text-gray-600">
-                  Correspondent Address
-                </label>
-                <textarea
-                  name="communication.correspondentAddress"
-                  value={formData.communication.correspondentAddress}
-                  onChange={handleChange}
-                  className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-400 text-gray-600"
-                ></textarea>
-              </div>
+              <InputField
+                label="Phone No"
+                type="text"
+                name="phoneNo"
+                required
+              />
+              <InputField
+                label="Alternate Phone No"
+                type="text"
+                name="altPhoneNo"
+              />
+              <InputField
+                label="Personal Email"
+                type="email"
+                name="personalEmail"
+                required
+              />
+              <InputField label="Work Email" type="email" name="workEmail" />
+              <TextareaField
+                label="Permanent Address"
+                name="permanentAddress"
+                required
+              />
+              <TextareaField
+                label="Correspondent Address"
+                name="correspondentAddress"
+              />
             </div>
           </section>
 
           {/* Insurance & Bank */}
-          <section className="border p-6 rounded-lg">
+          <section className="border p-6 rounded-lg shadow-sm bg-white">
             <h2 className="text-2xl font-semibold text-gray-700 mb-4 border-b pb-2">
               Insurance & Bank
             </h2>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <div>
-                <label className="block mb-2 text-gray-600">GPAI No</label>
-                <input
-                  type="text"
-                  name="insuranceAndBank.gpaiNo"
-                  value={formData.insuranceAndBank.gpaiNo}
-                  onChange={handleChange}
-                  className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-400 text-gray-600"
-                />
-              </div>
-              <div>
-                <label className="block mb-2 text-gray-600">Bank Name</label>
-                <input
-                  type="text"
-                  name="insuranceAndBank.bankName"
-                  value={formData.insuranceAndBank.bankName}
-                  onChange={handleChange}
-                  className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-400 text-gray-600"
-                />
-              </div>
-              <div>
-                <label className="block mb-2 text-gray-600">
-                  Bank Account No
-                </label>
-                <input
-                  type="text"
-                  name="insuranceAndBank.bankAccountNo"
-                  value={formData.insuranceAndBank.bankAccountNo}
-                  onChange={handleChange}
-                  className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-400 text-gray-600"
-                />
-              </div>
-              <div>
-                <label className="block mb-2 text-gray-600">IFSC</label>
-                <input
-                  type="text"
-                  name="insuranceAndBank.ifsc"
-                  value={formData.insuranceAndBank.ifsc}
-                  onChange={handleChange}
-                  className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-400 text-gray-600"
-                />
-              </div>
-              <div>
-                <label className="block mb-2 text-gray-600">UAN</label>
-                <input
-                  type="text"
-                  name="insuranceAndBank.uan"
-                  value={formData.insuranceAndBank.uan}
-                  onChange={handleChange}
-                  className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-400 text-gray-600"
-                />
-              </div>
-              <div>
-                <label className="block mb-2 text-gray-600">ESI No</label>
-                <input
-                  type="text"
-                  name="insuranceAndBank.esiNo"
-                  value={formData.insuranceAndBank.esiNo}
-                  onChange={handleChange}
-                  className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-400 text-gray-600"
-                />
-              </div>
+              {[
+                { label: "GPAI No", name: "gpaiNo" },
+                { label: "Bank Name", name: "bankName" },
+                { label: "Bank Account No", name: "bankAccountNo" },
+                { label: "IFSC", name: "ifsc" },
+                { label: "UAN", name: "uan" },
+                { label: "ESI No", name: "esiNo" },
+              ].map((field) => (
+                <div key={field.name}>
+                  <label className="block mb-2 text-gray-600">
+                    {field.label}
+                  </label>
+                  <input
+                    type="text"
+                    name={`insuranceAndBank.${field.name}`}
+                    value={formData.insuranceAndBank[field.name] || ""}
+                    onChange={handleChange}
+                    className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-400 text-gray-700"
+                  />
+                </div>
+              ))}
               <div>
                 <label className="block mb-2 text-gray-600">
                   Marital Status
                 </label>
                 <select
                   name="insuranceAndBank.maritalStatus"
-                  value={formData.insuranceAndBank.maritalStatus}
+                  value={formData.insuranceAndBank.maritalStatus || ""}
                   onChange={handleChange}
-                  className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-400 text-gray-600"
+                  className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-400 text-gray-700"
                 >
                   <option value="Single">Single</option>
                   <option value="Married">Married</option>
@@ -794,140 +536,106 @@ export default function NewEmployee() {
                 <input
                   type="date"
                   name="insuranceAndBank.marriageDate"
-                  value={formData.insuranceAndBank.marriageDate}
+                  value={formData.insuranceAndBank.marriageDate || ""}
                   onChange={handleChange}
-                  className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-400 text-gray-600"
+                  className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-400 text-gray-700"
                 />
               </div>
             </div>
           </section>
 
           {/* Family */}
-          <section className="border p-6 rounded-lg">
+          <section className="border p-6 rounded-lg shadow-sm bg-white">
             <h2 className="text-2xl font-semibold text-gray-700 mb-4 border-b pb-2">
               Family
             </h2>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-              {/* Mother */}
-              <div>
-                <label className="block mb-2 text-gray-600">Mother Name</label>
-                <input
-                  type="text"
-                  name="mother.motherName"
-                  value={formData.mother.motherName}
-                  onChange={handleChange}
-                  className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-400 text-gray-600"
-                />
-              </div>
-              <div>
-                <label className="block mb-2 text-gray-600">
-                  Mother Aadhar No
-                </label>
-                <input
-                  type="text"
-                  name="mother.motherAadharNo"
-                  value={formData.mother.motherAadharNo}
-                  onChange={handleChange}
-                  className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-400 text-gray-600"
-                />
-              </div>
-              <div>
-                <label className="block mb-2 text-gray-600">Mother DOB</label>
-                <input
-                  type="date"
-                  name="mother.motherDOB"
-                  value={formData.mother.motherDOB}
-                  onChange={handleChange}
-                  className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-400 text-gray-600"
-                />
-              </div>
-              {/* Father */}
-              <div>
-                <label className="block mb-2 text-gray-600">Father Name</label>
-                <input
-                  type="text"
-                  name="father.fatherName"
-                  value={formData.father.fatherName}
-                  onChange={handleChange}
-                  className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-400 text-gray-600"
-                />
-              </div>
-              <div>
-                <label className="block mb-2 text-gray-600">
-                  Father Aadhar No
-                </label>
-                <input
-                  type="text"
-                  name="father.fatherAadharNo"
-                  value={formData.father.fatherAadharNo}
-                  onChange={handleChange}
-                  className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-400 text-gray-600"
-                />
-              </div>
-              <div>
-                <label className="block mb-2 text-gray-600">Father DOB</label>
-                <input
-                  type="date"
-                  name="father.fatherDOB"
-                  value={formData.father.fatherDOB}
-                  onChange={handleChange}
-                  className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-400 text-gray-600"
-                />
-              </div>
-              {/* Spouse */}
-              <div>
-                <label className="block mb-2 text-gray-600">Spouse Name</label>
-                <input
-                  type="text"
-                  name="spouse.spouseName"
-                  value={formData.spouse.spouseName}
-                  onChange={handleChange}
-                  className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-400 text-gray-600"
-                />
-              </div>
-              <div>
-                <label className="block mb-2 text-gray-600">
-                  Spouse Aadhar No
-                </label>
-                <input
-                  type="text"
-                  name="spouse.spouseAadharNo"
-                  value={formData.spouse.spouseAadharNo}
-                  onChange={handleChange}
-                  className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-400 text-gray-600"
-                />
-              </div>
-              <div>
-                <label className="block mb-2 text-gray-600">Spouse DOB</label>
-                <input
-                  type="date"
-                  name="spouse.spouseDOB"
-                  value={formData.spouse.spouseDOB}
-                  onChange={handleChange}
-                  className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-400 text-gray-600"
-                />
-              </div>
+              {[
+                {
+                  category: "mother",
+                  label: "Mother Name",
+                  name: "motherName",
+                },
+                {
+                  category: "mother",
+                  label: "Mother Aadhar No",
+                  name: "motherAadharNo",
+                },
+                {
+                  category: "mother",
+                  label: "Mother DOB",
+                  name: "motherDOB",
+                  type: "date",
+                },
+                {
+                  category: "father",
+                  label: "Father Name",
+                  name: "fatherName",
+                },
+                {
+                  category: "father",
+                  label: "Father Aadhar No",
+                  name: "fatherAadharNo",
+                },
+                {
+                  category: "father",
+                  label: "Father DOB",
+                  name: "fatherDOB",
+                  type: "date",
+                },
+                {
+                  category: "spouse",
+                  label: "Spouse Name",
+                  name: "spouseName",
+                },
+                {
+                  category: "spouse",
+                  label: "Spouse Aadhar No",
+                  name: "spouseAadharNo",
+                },
+                {
+                  category: "spouse",
+                  label: "Spouse DOB",
+                  name: "spouseDOB",
+                  type: "date",
+                },
+              ].map((field) => (
+                <div key={field.name}>
+                  <label className="block mb-2 text-gray-600">
+                    {field.label}
+                  </label>
+                  <input
+                    type={field.type || "text"}
+                    name={`${field.category}.${field.name}`}
+                    value={formData[field.category][field.name] || ""}
+                    onChange={handleChange}
+                    className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-400 text-gray-700"
+                  />
+                </div>
+              ))}
             </div>
           </section>
 
-          {/* Children Section */}
+            {/* Children Section */}
           <section className="border p-6 rounded-lg">
             <h2 className="text-2xl font-semibold text-gray-700 mb-4 border-b pb-2">
               Children
             </h2>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
               <div>
-                <label className="block mb-2 text-gray-600">Child Name</label>
+                <label className="block text-sm font-medium text-gray-600">
+                  Child Name
+                </label>
                 <input
                   type="text"
                   name="childName"
                   value={child.childName}
                   onChange={handleChildChange}
-                  className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-400 text-gray-600"
+                  className="w-full px-4 py-2 border rounded-md focus:ring-2 focus:ring-blue-400 text-gray-600"
                 />
               </div>
               <div>
-                <label className="block mb-2 text-gray-600">
+                <label className="block text-sm font-medium text-gray-600">
                   Child Aadhar No
                 </label>
                 <input
@@ -935,17 +643,19 @@ export default function NewEmployee() {
                   name="childAadharNo"
                   value={child.childAadharNo}
                   onChange={handleChildChange}
-                  className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-400 text-gray-600"
+                  className="w-full px-4 py-2 border rounded-md focus:ring-2 focus:ring-blue-400 text-gray-600"
                 />
               </div>
               <div>
-                <label className="block mb-2 text-gray-600">Child DOB</label>
+                <label className="block text-sm font-medium text-gray-600">
+                  Child DOB
+                </label>
                 <input
                   type="date"
                   name="childDOB"
                   value={child.childDOB}
                   onChange={handleChildChange}
-                  className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-400 text-gray-600"
+                  className="w-full px-4 py-2 border rounded-md focus:ring-2 focus:ring-blue-400 text-gray-600"
                 />
               </div>
             </div>
@@ -953,7 +663,7 @@ export default function NewEmployee() {
               type="button"
               onClick={addChild}
               disabled={children?.length >= 2 && editingChildIndex === null}
-              className={`mt-4 px-5 py-2 rounded-md ${
+              className={`mt-4 px-5 py-2 rounded-md transition ${
                 children?.length >= 2 && editingChildIndex === null
                   ? "bg-gray-400 cursor-not-allowed"
                   : "bg-green-600 hover:bg-green-700 text-white"
@@ -967,14 +677,19 @@ export default function NewEmployee() {
                 <h3 className="text-lg font-semibold text-gray-700">
                   Added Children:
                 </h3>
-                <ul className="list-disc pl-5 text-gray-600">
+                <ul className="list-disc pl-5 text-gray-600 space-y-2">
                   {children.map((child, index) => (
-                    <li key={index} className="flex justify-between">
-                      {child.childName} – {child.childAadharNo} –{" "}
-                      {child.childDOB}
+                    <li
+                      key={index}
+                      className="flex justify-between items-center"
+                    >
+                      <span>
+                        {child.childName} – {child.childAadharNo} –{" "}
+                        {child.childDOB}
+                      </span>
                       <button
                         onClick={() => editChild(index)}
-                        className="ml-4 text-blue-600 underline"
+                        className="ml-4 text-blue-600 hover:underline"
                       >
                         Edit
                       </button>
@@ -986,13 +701,13 @@ export default function NewEmployee() {
           </section>
 
           {/* Emergency Contact */}
-          <section className="border p-6 rounded-lg">
+          <section className="border p-6 rounded-lg mt-6">
             <h2 className="text-2xl font-semibold text-gray-700 mb-4 border-b pb-2">
               Emergency Contact <span className="text-red-500">*</span>
             </h2>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
               <div>
-                <label className="block mb-2 text-gray-600">
+                <label className="block text-sm font-medium text-gray-600">
                   Name <span className="text-red-500">*</span>
                 </label>
                 <input
@@ -1000,12 +715,12 @@ export default function NewEmployee() {
                   name="emergencyContact.name"
                   value={formData.emergencyContact.name}
                   onChange={handleChange}
-                  className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-400 text-gray-600"
+                  className="w-full px-4 py-2 border rounded-md focus:ring-2 focus:ring-blue-400"
                   required
                 />
               </div>
               <div>
-                <label className="block mb-2 text-gray-600">
+                <label className="block text-sm font-medium text-gray-600">
                   Relationship <span className="text-red-500">*</span>
                 </label>
                 <input
@@ -1013,12 +728,12 @@ export default function NewEmployee() {
                   name="emergencyContact.relationship"
                   value={formData.emergencyContact.relationship}
                   onChange={handleChange}
-                  className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-400 text-gray-600"
+                  className="w-full px-4 py-2 border rounded-md focus:ring-2 focus:ring-blue-400"
                   required
                 />
               </div>
               <div>
-                <label className="block mb-2 text-gray-600">
+                <label className="block text-sm font-medium text-gray-600">
                   Phone <span className="text-red-500">*</span>
                 </label>
                 <input
@@ -1026,7 +741,7 @@ export default function NewEmployee() {
                   name="emergencyContact.phone"
                   value={formData.emergencyContact.phone}
                   onChange={handleChange}
-                  className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-400 text-gray-600"
+                  className="w-full px-4 py-2 border rounded-md focus:ring-2 focus:ring-blue-400"
                   required
                 />
               </div>
@@ -1034,11 +749,15 @@ export default function NewEmployee() {
           </section>
 
           {/* Submit Button */}
-          <div className="text-center">
+          <div className="flex justify-center mt-8">
             <button
               type="submit"
               disabled={loading}
-              className="mt-8 bg-blue-600 hover:bg-blue-700 text-white px-8 py-3 rounded-lg font-semibold transition duration-200 shadow-md"
+              className={`w-full sm:w-auto px-6 sm:px-8 py-3 rounded-lg font-semibold transition duration-200 shadow-md text-white ${
+                loading
+                  ? "bg-gray-400 cursor-not-allowed"
+                  : "bg-blue-600 hover:bg-blue-700"
+              }`}
             >
               {loading ? "Submitting..." : "Submit"}
             </button>
@@ -1048,3 +767,49 @@ export default function NewEmployee() {
     </Layout>
   );
 }
+
+const InputField = ({ label, type, name, required }) => (
+  <div>
+    <label className="block mb-2 text-gray-600">
+      {label} {required && <span className="text-red-500">*</span>}
+    </label>
+    <input
+      type={type}
+      name={name}
+      className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-400 text-gray-600"
+      required={required}
+    />
+  </div>
+);
+
+const SelectField = ({ label, name, options, required }) => (
+  <div>
+    <label className="block mb-2 text-gray-600">
+      {label} {required && <span className="text-red-500">*</span>}
+    </label>
+    <select
+      name={name}
+      className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-400 text-gray-600"
+      required={required}
+    >
+      {options.map((option, index) => (
+        <option key={index} value={option}>
+          {option}
+        </option>
+      ))}
+    </select>
+  </div>
+);
+
+const TextareaField = ({ label, name, required }) => (
+  <div className="md:col-span-2">
+    <label className="block mb-2 text-gray-600">
+      {label} {required && <span className="text-red-500">*</span>}
+    </label>
+    <textarea
+      name={name}
+      className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-400 text-gray-600"
+      required={required}
+    ></textarea>
+  </div>
+);
