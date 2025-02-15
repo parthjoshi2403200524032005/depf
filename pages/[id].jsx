@@ -1,5 +1,4 @@
-
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import axios from "axios";
 import { useRouter } from "next/router";
 import Layout from "../Components/Layout";
@@ -9,8 +8,8 @@ export default function NewEmployee() {
   const router = useRouter();
   const [error, setError] = useState(null);
   const [loading, setLoading] = useState(false);
-  const [childList, setChildList] = useState([]);
 
+  const { id } = router.query;
   const [formData, setFormData] = useState({
     employeeID: "",
     employeeName: "",
@@ -28,7 +27,7 @@ export default function NewEmployee() {
     appointmentLetterRefNo: "",
     dateOfJoining: "",
     status: "",
-    education: [ 
+    education: [
       {
         highestEducation: "",
         yearOfPassing: "",
@@ -88,6 +87,52 @@ export default function NewEmployee() {
       phone: "",
     },
   });
+  console.log("formData:", formData);
+
+  useEffect(() => {
+    if (id) {
+      console.log("Fetching employee with ID:", id);
+      getemployee(id);
+    }
+  }, [id]); // Only run when ID changes
+
+  const getemployee = async (id) => {
+    try {
+      const response = await axios.get(`${url}/employees/${id}`);
+      
+      const employeeData = response.data;
+  
+      // Normalize children array to remove unnecessary metadata
+      if (Array.isArray(employeeData.children)) {
+        employeeData.children = employeeData.children.map((child) => ({
+          childName: child._doc?.childName || child.childName || "",
+          childAadharNo: child._doc?.childAadharNo || child.childAadharNo || "",
+          childDOB: child._doc?.childDOB 
+          ? new Intl.DateTimeFormat("en-GB").format(new Date(child._doc.childDOB)) 
+          : child.childDOB || "",
+        
+        
+        }));
+      }
+  
+      setFormData(employeeData);
+    } catch (error) {
+      console.error("Error fetching employee data:", error);
+    }
+  };
+  
+  useEffect(() => {
+    if (formData.education) {
+      setEducationList(formData.education);
+    }
+    console.log("Updated Education List:", educationList); // Debugging line
+  }, [formData]);
+  useEffect(() => {
+    if (formData.children) {
+      setChildren(formData.children); // ✅ Correctly updating children state
+    }
+    console.log("Updated Children List:", children);
+  }, [formData]); // Runs when formData updates
 
   // State for a new child entry before adding it to the children array
   const [child, setChild] = useState({
@@ -100,8 +145,12 @@ export default function NewEmployee() {
     yearOfPassing: "",
     relevantExperience: "",
   });
-  const [children, setChildren] = useState([]);
-  const [educationList, setEducationList] = useState([]);
+
+  const [children, setChildren] = useState(formData.children || []);
+  const [educationList, setEducationList] = useState(formData.education || []);
+  console.log("educationList:", educationList);
+  console.log("children:", children);
+
   const [editingIndex, setEditingIndex] = useState(null);
   // Generic change handler (supports one level of nested properties using dot notation)
   const handleChange = (e) => {
@@ -123,39 +172,64 @@ export default function NewEmployee() {
     }
   };
 
-  
-  console.log("API URL:", url);
+  // const handleSubmit = async (e) => {
+  //   e.preventDefault();
+  //   setLoading(true);
+  //   setError(null);
+  //   // Merge the children into the main form data
+  //   const dataToSubmit = {
+  //     ...formData,
+  //     children: children,
+  //     education: education,
+  //   };
+  //   console.log("Data being submitted:", dataToSubmit);
+  //   try {
+  //     await axios.post(`${url}/employees`, dataToSubmit);
+  //     setLoading(false);
+  //     router.push("/"); // redirect as desired
+  //   } catch (err) {
+  //     setLoading(false);
+  //     setError(
+  //       err.response?.data?.message ||
+  //         "Error submitting form. Please try again."
+  //     );
+  //     console.error("Submission error:", err.response?.data || err.message);
+  //   }
+  // };
+  // console.log("API URL:", url);
   const handleSubmit = async (e) => {
     e.preventDefault();
     setLoading(true);
     setError(null);
-  
+
     // Ensure educationList is not empty
     if (educationList.length === 0) {
       setError("Please add at least one education entry.");
       setLoading(false);
       return;
     }
-  
+
     const dataToSubmit = {
       ...formData,
       children: children,
-      education: educationList,  // ✅ Send the correct list
+      education: educationList, // ✅ Send the correct list
     };
-  
+
     console.log("Data being submitted:", dataToSubmit);
-  
+
     try {
-      await axios.post(`${url}/employees`, dataToSubmit);
+      await axios.put(`${url}/employees/${id}`, dataToSubmit);
       setLoading(false);
       router.push("/"); // Redirect as desired
     } catch (err) {
       setLoading(false);
-      setError(err.response?.data?.message || "Error submitting form. Please try again.");
+      setError(
+        err.response?.data?.message ||
+          "Error submitting form. Please try again."
+      );
       console.error("Submission error:", err.response?.data || err.message);
     }
   };
-  
 
   const [editingChildIndex, setEditingChildIndex] = useState(null); // Track the editing child index
 
@@ -186,155 +260,180 @@ export default function NewEmployee() {
     setEditingChildIndex(index); // Set index for editing mode
   };
 
-  const deleteChild = (index) => {
-    setChildren(children.filter((_, i) => i !== index)); // Remove child
-  };
-
   const [editingEducationIndex, setEditingEducationIndex] = useState(null); // Track the editing education index
   const [editEduIndex, setEditEduIndex] = useState(null);
 
+  // const handleEducationChange = (e, index) => {
+  //   const { name, value } = e.target;
+  //   const updatedEducation = [...educationList];
+  //   updatedEducation[index] = { ...updatedEducation[index], [name]: value };
+  //   setEducationList(updatedEducation);
+  // };
   const handleEducationChange = (e) => {
     const { name, value } = e.target;
-    setEducation((prev) => ({
-      ...prev,
-      [name]: value,
-    }));
+    setEducation((prev) => ({ ...prev, [name]: value }));
   };
-
+  
+  
   const addEducation = () => {
     if (editEduIndex !== null) {
       setEducationList((prev) =>
         prev.map((item, index) =>
-          index === editEduIndex ? { ...education } : item
+          index === editEduIndex ? education : item
         )
       );
       setEditEduIndex(null);
     } else {
       setEducationList((prev) => [...prev, education]);
     }
+  
     setEducation({
       highestEducation: "",
       yearOfPassing: "",
       relevantExperience: "",
     });
   };
+  
 
   const editEducation = (index) => {
     setEducation(educationList[index]);
     setEditEduIndex(index);
   };
-
-  const deleteEducation = (index) => {
-    setEducationList(educationList.filter((_, i) => i !== index)); // Remove education entry
-  };
+  
 
   return (
     <Layout>
-       <div className="max-w-4xl mx-auto bg-white p-6 md:p-8 rounded-xl shadow-lg">
-      <h1 className="text-2xl md:text-3xl font-bold text-center mb-6 md:mb-8 text-gray-800">
-        New Employee Registration
-      </h1>
-      {error && <p className="mb-4 text-red-500 text-center">{error}</p>}
-      <form onSubmit={handleSubmit} className="space-y-6 md:space-y-10">
-        {/* Basic Information */}
-        <section className="border p-4 md:p-6 rounded-lg">
-          <h2 className="text-xl md:text-2xl font-semibold text-gray-700 mb-3 md:mb-4 border-b pb-2">
-            Basic Information
-          </h2>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6">
-            {[
-              { label: "Employee ID", name: "employeeID", required: true },
-              { label: "Employee Name", name: "employeeName", required: true },
-              { label: "Position", name: "appointedPosition", required: true },
-              { label: "Department", name: "department", required: true },
-              { label: "Workplace", name: "workplace", required: true },
-              { label: "Project", name: "project" },
-              {
-                label: "Reporting Manager Employee ID",
-                name: "reportingEmployeeManagerID",
-              },
-              { label: "Referred By", name: "referredBy" },
-            ].map(({ label, name, required }) => (
-              <div key={name}>
-                <label className="block mb-1 md:mb-2 text-gray-600">
-                  {label} {required && <span className="text-red-500">*</span>}
-                </label>
-                <input
-                  type="text"
-                  name={name}
-                  value={formData[name]}
-                  onChange={handleChange}
-                  className="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-400 text-gray-600"
-                  required={required}
-                />
-              </div>
-            ))}
-            <div className="flex items-center space-x-2 md:space-x-3">
-              <input
-                type="checkbox"
-                name="manager"
-                checked={formData.manager}
-                onChange={handleChange}
-                className="h-5 w-5"
-              />
-              <label className="text-gray-600 font-medium">Manager</label>
-            </div>
-          </div>
-        </section>
-
-        {/* Dates & Employment */}
-        <section className="border p-4 md:p-6 rounded-lg">
-          <h2 className="text-xl md:text-2xl font-semibold text-gray-700 mb-3 md:mb-4 border-b pb-2">
-            Dates & Employment
-          </h2>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6">
-            {[
-              { label: "Interview Date", name: "interviewDate", type: "date" },
-              { label: "Offered Date", name: "offeredDate", type: "date" },
-              { label: "Offer Acceptance Date", name: "offerAcceptanceDate", type: "date" },
-              {
-                label: "On-Roll/Off-Roll",
-                name: "onRollOffRoll",
-                type: "select",
-                options: ["On-Roll", "Off-Roll"],
-                required: true,
-              },
-              { label: "Appointment Letter Ref No", name: "appointmentLetterRefNo" },
-              { label: "Date of Joining", name: "dateOfJoining", type: "date", required: true },
-              { label: "Status", name: "status" },
-            ].map(({ label, name, type = "text", required, options }) => (
-              <div key={name}>
-                <label className="block mb-1 md:mb-2 text-gray-600">
-                  {label} {required && <span className="text-red-500">*</span>}
-                </label>
-                {type === "select" ? (
-                  <select
-                    name={name}
-                    value={formData[name]}
-                    onChange={handleChange}
-                    className="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-400 text-gray-600"
-                    required={required}
-                  >
-                    {options.map((option) => (
-                      <option key={option} value={option}>
-                        {option}
-                      </option>
-                    ))}
-                  </select>
-                ) : (
+      <div className="max-w-4xl mx-auto bg-white p-6 md:p-8 rounded-xl shadow-lg">
+        <h1 className="text-2xl md:text-3xl font-bold text-center mb-6 md:mb-8 text-gray-800">
+          New Employee Registration
+        </h1>
+        {error && <p className="mb-4 text-red-500 text-center">{error}</p>}
+        <form onSubmit={handleSubmit} className="space-y-6 md:space-y-10">
+          {/* Basic Information */}
+          <section className="border p-4 md:p-6 rounded-lg">
+            <h2 className="text-xl md:text-2xl font-semibold text-gray-700 mb-3 md:mb-4 border-b pb-2">
+              Basic Information
+            </h2>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6">
+              {[
+                { label: "Employee ID", name: "employeeID", required: true },
+                {
+                  label: "Employee Name",
+                  name: "employeeName",
+                  required: true,
+                },
+                {
+                  label: "Position",
+                  name: "appointedPosition",
+                  required: true,
+                },
+                { label: "Department", name: "department", required: true },
+                { label: "Workplace", name: "workplace", required: true },
+                { label: "Project", name: "project" },
+                {
+                  label: "Reporting Manager Employee ID",
+                  name: "reportingEmployeeManagerID",
+                },
+                { label: "Referred By", name: "referredBy" },
+              ].map(({ label, name, required }) => (
+                <div key={name}>
+                  <label className="block mb-1 md:mb-2 text-gray-600">
+                    {label}{" "}
+                    {required && <span className="text-red-500">*</span>}
+                  </label>
                   <input
-                    type={type}
+                    type="text"
                     name={name}
                     value={formData[name]}
                     onChange={handleChange}
                     className="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-400 text-gray-600"
                     required={required}
                   />
-                )}
+                </div>
+              ))}
+              <div className="flex items-center space-x-2 md:space-x-3">
+                <input
+                  type="checkbox"
+                  name="manager"
+                  checked={formData.manager}
+                  onChange={handleChange}
+                  className="h-5 w-5"
+                />
+                <label className="text-gray-600 font-medium">Manager</label>
               </div>
-            ))}
-          </div>
-        </section>
+            </div>
+          </section>
+
+          {/* Dates & Employment */}
+          <section className="border p-4 md:p-6 rounded-lg">
+            <h2 className="text-xl md:text-2xl font-semibold text-gray-700 mb-3 md:mb-4 border-b pb-2">
+              Dates & Employment
+            </h2>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6">
+              {[
+                {
+                  label: "Interview Date",
+                  name: "interviewDate",
+                  type: "date",
+                },
+                { label: "Offered Date", name: "offeredDate", type: "date" },
+                {
+                  label: "Offer Acceptance Date",
+                  name: "offerAcceptanceDate",
+                  type: "date",
+                },
+                {
+                  label: "On-Roll/Off-Roll",
+                  name: "onRollOffRoll",
+                  type: "select",
+                  options: ["On-Roll", "Off-Roll"],
+                  required: true,
+                },
+                {
+                  label: "Appointment Letter Ref No",
+                  name: "appointmentLetterRefNo",
+                },
+                {
+                  label: "Date of Joining",
+                  name: "dateOfJoining",
+                  type: "date",
+                  required: true,
+                },
+                { label: "Status", name: "status" },
+              ].map(({ label, name, type = "text", required, options }) => (
+                <div key={name}>
+                  <label className="block mb-1 md:mb-2 text-gray-600">
+                    {label}{" "}
+                    {required && <span className="text-red-500">*</span>}
+                  </label>
+                  {type === "select" ? (
+                    <select
+                      name={name}
+                      value={formData[name]}
+                      onChange={handleChange}
+                      className="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-400 text-gray-600"
+                      required={required}
+                    >
+                      {options.map((option) => (
+                        <option key={option} value={option}>
+                          {option}
+                        </option>
+                      ))}
+                    </select>
+                  ) : (
+                    <input
+                      type={type}
+                      name={name}
+                      value={formData[name]}
+                      onChange={handleChange}
+                      className="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-400 text-gray-600"
+                      required={required}
+                    />
+                  )}
+                </div>
+              ))}
+            </div>
+          </section>
           {/* Education Section */}
           <section className="border p-6 rounded-lg">
             <h2 className="text-2xl font-semibold text-gray-700 mb-4 border-b pb-2">
@@ -391,17 +490,19 @@ export default function NewEmployee() {
               {editEduIndex !== null ? "Update Education" : "Add Education"}
             </button>
 
-            {educationList.length > 0 && (
+            {educationList?.length > 0 && (
               <div className="mt-4">
                 <h3 className="text-lg font-semibold text-gray-700">
                   Added Education:
                 </h3>
                 <ul className="list-disc pl-5 text-gray-600">
                   {educationList.map((edu, index) => (
-                    <li key={index} className="flex justify-between">
-                      {edu.highestEducation} – {edu.yearOfPassing} –{" "}
-                      {edu.relevantExperience}
+                    <li key={edu._id || index} className="flex justify-between">
+                      {edu.highestEducation || "N/A"} –{" "}
+                      {edu.yearOfPassing || "N/A"} –{" "}
+                      {edu.relevantExperience || "N/A"}
                       <button
+                      type="button"
                         onClick={() => editEducation(index)}
                         className="ml-4 text-blue-600 underline"
                       >
@@ -838,9 +939,11 @@ export default function NewEmployee() {
                 <ul className="list-disc pl-5 text-gray-600">
                   {children.map((child, index) => (
                     <li key={index} className="flex justify-between">
-                      {child.childName} – {child.childAadharNo} –{" "}
-                      {child.childDOB}
+                      {child.childName || "No Name"} –{" "}
+                      {child.childAadharNo || "No Aadhar"} –{" "}
+                      {child.childDOB || "No DOB"}
                       <button
+                      type="button"
                         onClick={() => editChild(index)}
                         className="ml-4 text-blue-600 underline"
                       >
@@ -908,7 +1011,7 @@ export default function NewEmployee() {
               disabled={loading}
               className="mt-8 bg-blue-600 hover:bg-blue-700 text-white px-8 py-3 rounded-lg font-semibold transition duration-200 shadow-md"
             >
-              {loading ? "Submitting..." : "Submit"}
+              {loading ? "Updating..." : "Update"}
             </button>
           </div>
         </form>

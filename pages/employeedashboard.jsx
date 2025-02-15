@@ -117,7 +117,9 @@ export default function EmployeeManagement() {
                       >
                         Info
                       </button>
-                      <button className="bg-yellow-500 hover:bg-yellow-600 text-white px-4 py-2 rounded-md text-sm shadow-md">
+                      <button
+                        onClick={() => window.location.href = `/${employee._id}`}
+                      className="bg-yellow-500 hover:bg-yellow-600 text-white px-4 py-2 rounded-md text-sm shadow-md">
                         Edit
                       </button>
                       <button
